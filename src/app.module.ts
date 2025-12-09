@@ -10,6 +10,7 @@ import { AssignmentsModule } from './assignments/assignments.module';
 import { LocationsModule } from './locations/locations.module';
 import { AlertsModule } from './alerts/alerts.module';
 import { SubscriptionsModule } from './subscriptions/subscriptions.module';
+import { AuditLogModule } from './audit-log/audit-log.module';
 
 @Module({
   imports: [
@@ -24,6 +25,7 @@ import { SubscriptionsModule } from './subscriptions/subscriptions.module';
     LocationsModule,
     AlertsModule,
     SubscriptionsModule,
+    AuditLogModule,
   ],
 })
 export class AppModule {}
