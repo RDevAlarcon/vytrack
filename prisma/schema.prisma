@@ -1,0 +1,389 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+/// Estados de la compañía
+enum CompanyStatus {
+  ACTIVE
+  SUSPENDED
+}
+
+/// Roles de usuario
+enum UserRole {
+  SUPERADMIN
+  COMPANY_ADMIN
+  COMPANY_USER
+}
+
+/// Estado de vehículo
+enum VehicleStatus {
+  ACTIVE
+  INACTIVE
+  BLOCKED
+}
+
+/// Tipo de geocerca
+enum GeofenceType {
+  POLYGON
+  CIRCLE
+}
+
+/// Tipo de regla / evento de alerta
+enum AlertType {
+  SPEED
+  GEOFENCE
+  IDLE
+  DISCONNECT
+  NO_SIGNAL
+}
+
+/// Estado de alerta
+enum AlertStatus {
+  OPEN
+  RESOLVED
+}
+
+/// Estado de asignación driver+vehículo
+enum AssignmentStatus {
+  ASSIGNED
+  IN_PROGRESS
+  PAUSED
+  COMPLETED
+  CANCELLED
+}
+
+/// Estado de suscripción de compañía
+enum SubscriptionStatus {
+  ACTIVE
+  PAST_DUE
+  CANCELLED
+}
+
+/// Fuente de la ubicación
+enum LocationSource {
+  APP
+  DEVICE
+}
+
+model Company {
+  id             String              @id @default(uuid())
+  name           String              @unique
+  country        String
+  currency       String
+  status         CompanyStatus       @default(ACTIVE)
+  contactEmail   String
+  contactPhone   String
+
+  users          User[]
+  drivers        Driver[]
+  vehicles       Vehicle[]
+  geofences      Geofence[]
+  alertRules     AlertRule[]
+  alertEvents    AlertEvent[]
+  locations      Location[]
+  driverAssigns  DriverAssignment[]
+  subscriptions  CompanySubscription[]
+  invites        Invite[]
+  auditLogs      AuditLog[]
+  deviceBindings DeviceBinding[]
+  devices        Device[]
+
+  createdAt      DateTime            @default(now())
+  updatedAt      DateTime            @updatedAt
+}
+
+model User {
+  id           String    @id @default(uuid())
+  companyId    String?   // null para SUPERADMIN
+  email        String    @unique
+  passwordHash String
+  role         UserRole
+  mfaEnabled   Boolean   @default(false)
+  active       Boolean   @default(true)
+
+  company      Company?  @relation(fields: [companyId], references: [id])
+  auditLogs    AuditLog[]
+
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  @@index([companyId, role])
+}
+
+model Driver {
+  id             String             @id @default(uuid())
+  companyId      String
+  name           String
+  licenseNumber  String?
+  licenseExpiry  DateTime?
+  active         Boolean            @default(true)
+
+  company        Company            @relation(fields: [companyId], references: [id])
+  assignments    DriverAssignment[]
+  locations      Location[]
+  alertEvents    AlertEvent[]
+
+  createdAt      DateTime           @default(now())
+  updatedAt      DateTime           @updatedAt
+
+  @@index([companyId])
+}
+
+model Vehicle {
+  id             String             @id @default(uuid())
+  companyId      String
+  plate          String
+  vin            String?
+  type           String?
+  capacity       String?
+  status         VehicleStatus      @default(ACTIVE)
+  tags           String[]
+
+  company        Company            @relation(fields: [companyId], references: [id])
+  locations      Location[]
+  alertEvents    AlertEvent[]
+  assignments    DriverAssignment[]
+  devices        Device[]
+  deviceBindings DeviceBinding[]
+
+  createdAt      DateTime           @default(now())
+  updatedAt      DateTime           @updatedAt
+
+  @@unique([companyId, plate])
+  @@unique([companyId, vin])
+  @@index([companyId, status])
+}
+
+model Device {
+  id         String   @id @default(uuid())
+  companyId  String
+  hardwareId String   @unique
+  active     Boolean  @default(true)
+  vehicleId  String?  @unique
+  lastSeenAt DateTime?
+
+  company    Company  @relation(fields: [companyId], references: [id])
+  vehicle    Vehicle? @relation(fields: [vehicleId], references: [id])
+  locations  Location[]
+  bindings   DeviceBinding[]
+
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([companyId])
+}
+
+model DeviceBinding {
+  id         String   @id @default(uuid())
+  deviceId   String
+  vehicleId  String
+  companyId  String
+  startAt    DateTime
+  endAt      DateTime?
+
+  device     Device   @relation(fields: [deviceId], references: [id])
+  vehicle    Vehicle  @relation(fields: [vehicleId], references: [id])
+  company    Company  @relation(fields: [companyId], references: [id])
+
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([companyId])
+  @@index([deviceId, startAt])
+  @@index([vehicleId, startAt])
+}
+
+model DriverAssignment {
+  id            String           @id @default(uuid())
+  companyId     String
+  driverId      String
+  vehicleId     String
+  taskRef       String?
+  startPlanned  DateTime?
+  endPlanned    DateTime?
+  status        AssignmentStatus
+  startedAt     DateTime?
+  endedAt       DateTime?
+
+  company       Company          @relation(fields: [companyId], references: [id])
+  driver        Driver           @relation(fields: [driverId], references: [id])
+  vehicle       Vehicle          @relation(fields: [vehicleId], references: [id])
+
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
+
+  @@index([companyId, vehicleId, startPlanned])
+  @@index([companyId, driverId, startPlanned])
+}
+
+model Geofence {
+  id         String        @id @default(uuid())
+  companyId  String
+  name       String
+  type       GeofenceType
+  // Para POLYGON
+  polygon    Json?
+  // Para CIRCLE
+  centerLat  Decimal?      @db.Decimal(9, 6)
+  centerLng  Decimal?      @db.Decimal(9, 6)
+  radiusM    Int?
+  tags       String[]
+  active     Boolean       @default(true)
+
+  company    Company       @relation(fields: [companyId], references: [id])
+  alertRules AlertRule[]
+
+  createdAt  DateTime      @default(now())
+  updatedAt  DateTime      @updatedAt
+
+  @@index([companyId, type])
+}
+
+model AlertRule {
+  id         String      @id @default(uuid())
+  companyId  String
+  name       String
+  type       AlertType
+  threshold  Json        // ej. { kmh:90, idleMinutes:15 }
+  schedule   Json?       // ventanas horarias
+  geofenceId String?
+  active     Boolean     @default(true)
+
+  company    Company     @relation(fields: [companyId], references: [id])
+  geofence   Geofence?   @relation(fields: [geofenceId], references: [id])
+  events     AlertEvent[]
+
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
+
+  @@index([companyId, type])
+  @@index([geofenceId])
+}
+
+model AlertEvent {
+  id           String       @id @default(uuid())
+  companyId    String
+  alertRuleId  String?
+  vehicleId    String
+  driverId     String?
+  type         AlertType
+  status       AlertStatus  @default(OPEN)
+  occurredAt   DateTime
+  resolvedAt   DateTime?
+  payload      Json?
+
+  company      Company      @relation(fields: [companyId], references: [id])
+  alertRule    AlertRule?   @relation(fields: [alertRuleId], references: [id])
+  vehicle      Vehicle      @relation(fields: [vehicleId], references: [id])
+  driver       Driver?      @relation(fields: [driverId], references: [id])
+
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+
+  @@index([companyId, createdAt])
+  @@index([vehicleId, createdAt])
+  @@index([companyId, status])
+}
+
+model Location {
+  /// Sujeto a retención de 90 días
+  id         String         @id @default(uuid())
+  companyId  String
+  vehicleId  String
+  driverId   String?
+  deviceId   String?
+  timestamp  DateTime
+  lat        Decimal        @db.Decimal(9, 6)
+  lng        Decimal        @db.Decimal(9, 6)
+  speedKmh   Decimal?       @db.Decimal(6, 2)
+  heading    Decimal?       @db.Decimal(6, 2)
+  accuracyM  Decimal?       @db.Decimal(6, 2)
+  source     LocationSource
+  raw        Json?
+
+  company    Company        @relation(fields: [companyId], references: [id])
+  vehicle    Vehicle        @relation(fields: [vehicleId], references: [id])
+  driver     Driver?        @relation(fields: [driverId], references: [id])
+  device     Device?        @relation(fields: [deviceId], references: [id])
+
+  createdAt  DateTime       @default(now())
+  updatedAt  DateTime       @updatedAt
+
+  @@index([companyId, vehicleId, timestamp])
+  @@index([vehicleId, timestamp])
+}
+
+model SubscriptionPlan {
+  id          String   @id @default(uuid())
+  name        String
+  maxVehicles Int
+  maxUsers    Int
+  price       Decimal  @db.Decimal(10, 2)
+  tier        String
+  active      Boolean  @default(true)
+
+  companySubs CompanySubscription[]
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model CompanySubscription {
+  id                 String             @id @default(uuid())
+  companyId          String
+  planId             String
+  status             SubscriptionStatus
+  startsAt           DateTime
+  endsAt             DateTime?
+  currentMaxVehicles Int
+  currentMaxUsers    Int
+
+  company            Company            @relation(fields: [companyId], references: [id])
+  plan               SubscriptionPlan   @relation(fields: [planId], references: [id])
+
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
+
+  @@index([companyId, planId])
+  // Nota: la unicidad de "una sola ACTIVE por company" se maneja mejor en lógica de aplicación
+}
+
+model AuditLog {
+  id         String   @id @default(uuid())
+  companyId  String?
+  userId     String
+  action     String
+  entity     String
+  entityId   String
+  metadata   Json?
+
+  company    Company? @relation(fields: [companyId], references: [id])
+  user       User     @relation(fields: [userId], references: [id])
+
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([companyId, createdAt])
+  @@index([userId, createdAt])
+}
+
+model Invite {
+  id         String    @id @default(uuid())
+  companyId  String
+  email      String
+  role       UserRole
+  token      String    @unique
+  expiresAt  DateTime
+  accepted   Boolean   @default(false)
+
+  company    Company   @relation(fields: [companyId], references: [id])
+
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  @@index([companyId, email])
+}
