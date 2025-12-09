@@ -9,6 +9,7 @@ import { DriversModule } from './drivers/drivers.module';
 import { AssignmentsModule } from './assignments/assignments.module';
 import { LocationsModule } from './locations/locations.module';
 import { AlertsModule } from './alerts/alerts.module';
+import { SubscriptionsModule } from './subscriptions/subscriptions.module';
 
 @Module({
   imports: [
@@ -22,6 +23,7 @@ import { AlertsModule } from './alerts/alerts.module';
     AssignmentsModule,
     LocationsModule,
     AlertsModule,
+    SubscriptionsModule,
   ],
 })
 export class AppModule {}
