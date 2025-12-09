@@ -3,7 +3,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Home, Car, Users, ClipboardList, Bell, BarChart3, Settings } from 'lucide-react';
+import { Home, Car, Users, ClipboardList, Bell, BarChart3, Settings, Map } from 'lucide-react';
 import { cn } from '../../lib/utils';
 
 const links = [
@@ -11,6 +11,7 @@ const links = [
   { href: '/vehicles', label: 'Vehicles', icon: Car },
   { href: '/drivers', label: 'Drivers', icon: Users },
   { href: '/assignments', label: 'Assignments', icon: ClipboardList },
+  { href: '/tracking', label: 'Tracking', icon: Map },
   { href: '/alerts', label: 'Alerts', icon: Bell },
   { href: '/reports', label: 'Reports', icon: BarChart3 },
   { href: '/settings/subscription', label: 'Subscription', icon: Settings },
