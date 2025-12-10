@@ -64,12 +64,12 @@ class _LoginScreenState extends State<LoginScreen> {
                                 if (_formKey.currentState?.validate() ?? false) {
                                   try {
                                     await auth.login(_emailController.text.trim(), _passwordController.text.trim());
+                                    if (!mounted) return;
                                   } catch (e) {
-                                    if (mounted) {
-                                      ScaffoldMessenger.of(context).showSnackBar(
-                                        SnackBar(content: Text('Error de login: $e')),
-                                      );
-                                    }
+                                    if (!mounted) return;
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(content: Text('Error de login: $e')),
+                                    );
                                   }
                                 }
                               },

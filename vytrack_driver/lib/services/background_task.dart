@@ -4,7 +4,7 @@ import 'location_service.dart';
 class BackgroundTask {
   static const String periodicTask = 'vytrack_location_task';
 
-  // TODO: persistir vehicleId/driverId en storage; por ahora hardcode de prueba
+  // Nota: persistir vehicleId/driverId en storage; por ahora hardcode de prueba.
   static const String _demoVehicleId = 'REPLACE_VEHICLE_ID';
   static const String _demoDriverId = 'REPLACE_DRIVER_ID';
 

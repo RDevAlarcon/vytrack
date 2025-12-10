@@ -7,7 +7,7 @@ class AssignmentProvider extends ChangeNotifier {
   Assignment? currentAssignment;
   bool isLoading = false;
 
-  // TODO: obtener driverId desde sesión; por ahora hardcode para pruebas
+  // Nota: obtener driverId desde sesión/claims; por ahora hardcode para pruebas.
   static const String demoDriverId = 'REPLACE_DRIVER_ID';
 
   Future<void> loadAssignments() async {
