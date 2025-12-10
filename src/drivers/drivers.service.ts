@@ -55,6 +55,7 @@ export class DriversService {
     if (!driver) throw new NotFoundException('Driver no encontrado');
 
     await this.prisma.$transaction([
+      this.prisma.driverAssignment.deleteMany({ where: { driverId: id, companyId } }),
       this.prisma.user.deleteMany({ where: { driverId: id, companyId } }),
       this.prisma.driver.deleteMany({ where: { id, companyId } }),
     ]);
