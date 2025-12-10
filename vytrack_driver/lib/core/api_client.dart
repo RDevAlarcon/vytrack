@@ -1,11 +1,12 @@
+import 'package:http/http.dart' as http;
 import '../core/config.dart';
 import '../services/auth_service.dart';
 
 class ApiClient {
-  final _client = const AuthService();
+  final AuthService _auth = const AuthService();
 
   Future<Map<String, String>> _headers(Map<String, String>? headers) async {
-    final token = await _client.getToken();
+    final token = await _auth.getToken();
     final base = <String, String>{
       'Content-Type': 'application/json',
     };
