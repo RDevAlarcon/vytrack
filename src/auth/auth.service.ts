@@ -29,6 +29,7 @@ export class AuthService {
       sub: user.id,
       role: user.role,
       companyId: user.companyId ?? null,
+      driverId: user.driverId ?? null,
     };
 
     const accessToken = await this.jwtService.signAsync(payload);

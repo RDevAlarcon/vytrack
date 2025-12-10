@@ -17,6 +17,7 @@ enum UserRole {
   SUPERADMIN
   COMPANY_ADMIN
   COMPANY_USER
+  DRIVER
 }
 
 /// Estado de vehículo
@@ -99,6 +100,7 @@ model Company {
 model User {
   id           String    @id @default(uuid())
   companyId    String?   // null para SUPERADMIN
+  driverId     String?
   email        String    @unique
   passwordHash String
   role         UserRole
@@ -106,12 +108,14 @@ model User {
   active       Boolean   @default(true)
 
   company      Company?  @relation(fields: [companyId], references: [id])
+  driver       Driver?   @relation("UserDriver", fields: [driverId], references: [id])
   auditLogs    AuditLog[]
 
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
 
   @@index([companyId, role])
+  @@unique([driverId])
 }
 
 model Driver {
@@ -126,6 +130,7 @@ model Driver {
   assignments    DriverAssignment[]
   locations      Location[]
   alertEvents    AlertEvent[]
+  user           User?          @relation("UserDriver")
 
   createdAt      DateTime           @default(now())
   updatedAt      DateTime           @updatedAt
