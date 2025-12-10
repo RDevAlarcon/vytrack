@@ -62,14 +62,11 @@ class _LoginScreenState extends State<LoginScreen> {
                             ? null
                             : () async {
                                 if (_formKey.currentState?.validate() ?? false) {
+                                  final messenger = ScaffoldMessenger.of(context);
                                   try {
                                     await auth.login(_emailController.text.trim(), _passwordController.text.trim());
-                                    if (!mounted) return;
                                   } catch (e) {
-                                    if (!mounted) return;
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(content: Text('Error de login: $e')),
-                                    );
+                                    messenger.showSnackBar(SnackBar(content: Text('Error de login: $e')));
                                   }
                                 }
                               },
