@@ -50,8 +50,15 @@ export class DriversService {
   }
 
   async remove(companyId: string, id: string) {
-    const result = await this.prisma.driver.deleteMany({ where: { id, companyId } });
-    if (result.count === 0) throw new NotFoundException('Driver no encontrado');
+    // Asegura pertenencia antes de borrar y elimina usuario vinculado (rol DRIVER) si existe.
+    const driver = await this.prisma.driver.findFirst({ where: { id, companyId } });
+    if (!driver) throw new NotFoundException('Driver no encontrado');
+
+    await this.prisma.$transaction([
+      this.prisma.user.deleteMany({ where: { driverId: id, companyId } }),
+      this.prisma.driver.deleteMany({ where: { id, companyId } }),
+    ]);
+
     return { deleted: true };
   }
 }
