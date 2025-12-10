@@ -1,13 +1,11 @@
-import 'package:http/http.dart' as http;
 import '../core/config.dart';
 import '../services/auth_service.dart';
 
 class ApiClient {
-  final http.Client _client;
-  ApiClient({http.Client? client}) : _client = client ?? http.Client();
+  final _client = const AuthService();
 
   Future<Map<String, String>> _headers(Map<String, String>? headers) async {
-    final token = await AuthService().getToken();
+    final token = await _client.getToken();
     final base = <String, String>{
       'Content-Type': 'application/json',
     };
@@ -25,14 +23,14 @@ class ApiClient {
   }
 
   Future<http.Response> get(String path, {Map<String, String>? headers, Map<String, dynamic>? query}) async {
-    return _client.get(_buildUri(path, query), headers: await _headers(headers));
+    return http.get(_buildUri(path, query), headers: await _headers(headers));
   }
 
   Future<http.Response> post(String path, {Map<String, String>? headers, Object? body}) async {
-    return _client.post(_buildUri(path), headers: await _headers(headers), body: body);
+    return http.post(_buildUri(path), headers: await _headers(headers), body: body);
   }
 
   Future<http.Response> patch(String path, {Map<String, String>? headers, Object? body}) async {
-    return _client.patch(_buildUri(path), headers: await _headers(headers), body: body);
+    return http.patch(_buildUri(path), headers: await _headers(headers), body: body);
   }
 }
