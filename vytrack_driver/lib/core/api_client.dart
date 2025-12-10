@@ -3,7 +3,7 @@ import '../core/config.dart';
 import '../services/auth_service.dart';
 
 class ApiClient {
-  final AuthService _auth = const AuthService();
+  final AuthService _auth = AuthService();
 
   Future<Map<String, String>> _headers(Map<String, String>? headers) async {
     final token = await _auth.getToken();
